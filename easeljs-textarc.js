@@ -15,46 +15,60 @@
  *
  */
 
-this.createjs=this.createjs||{};
 
-(function () {
 
-    // define a new TextArc class that extends Text and drawing arc text.
-    var TextArc = function (text, font, color, radius) {
-        this.initialize(text, font, color, radius);
-    }
+this.createjs = this.createjs || {};
 
-    TextArc.prototype = new createjs.Text(); // extend Text.
 
-    // save off initialize method from Text so we can call it from our own:
-    TextArc.prototype.Text_initialize = TextArc.prototype.initialize;
 
-    // overwrite Text's initialize method with our own:
-    TextArc.prototype.initialize = function (text, font, color, radius) {
-        this.Text_initialize(text, font, color);
-        this.radius = radius;
-        this.textBaseline = "center";
-    }
 
-    // use the same approach with draw:
-    TextArc.prototype.Text_drawTextLine = TextArc.prototype._drawTextLine;
 
-    //Override _drawTextLine method
-    TextArc.prototype._drawTextLine = function (ctx, text, y) {
-        var wordWidth = ctx.measureText(text).width;
-        var angle = 2 * Math.asin(wordWidth / ( 2 * this.radius ));
-        ctx.save();
-        ctx.rotate(-1 * angle / 2);
-        ctx.rotate(-1 * (angle / text.length) / 2);
-        for (var i = 0; i < text.length; i++) {
-            ctx.rotate(angle / text.length);
-            ctx.save();
-            ctx.translate(0, -1 * this.radius);
-            this.Text_drawTextLine(ctx, text[i], y);
-            ctx.restore();
-        }
-        ctx.restore();
-    }
+(function ()
+{
 
-    createjs.TextArc = TextArc;
+	function TextArc (text, font, color, radius, letterSpacing)
+	{
+		this.Text_constructor (text, font, color);
+		this.radius = radius;
+
+		if (letterSpacing)
+		{
+			this.letterSpacing = letterSpacing / 10;
+		}
+	}
+
+
+	var p = createjs.extend (TextArc, createjs.Text);
+
+
+	p.draw = function(ctx)
+	{
+		this.Text_draw (ctx);
+	};
+
+
+	p._drawTextLine = function (ctx, text, y)
+	{
+		var wordWidth = ctx.measureText (text).width;
+		// var angle = 2 * Math.asin (wordWidth / ( 2 * this.radius ));
+		// var angle = 2 * Math.asin (wordWidth / ( 1.6 * this.radius ));
+		var angle = 2 * Math.asin (wordWidth / ( (2 - this.letterSpacing) * this.radius ));
+		ctx.save ();
+		ctx.rotate (-1 * angle / 2);
+		ctx.rotate (-1 * (angle / text.length) / 2);
+
+		for (var i = 0; i < text.length; i ++)
+		{
+			ctx.rotate (angle / text.length);
+			ctx.save ();
+			ctx.translate (0, -1 * this.radius);
+			this.Text__drawTextLine (ctx, text[i], y);
+			ctx.restore ();
+		}
+
+		ctx.restore();
+	};
+
+
+	createjs.TextArc = createjs.promote (TextArc, "Text");
 }());
